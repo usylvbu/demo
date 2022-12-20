@@ -9,14 +9,23 @@ import java.util.Map;
 
 public class ReadFile {
 
-    public static void main(String[] args) {
-        Map<String, String> map = getFilesDatas("D:\\Desktop\\test\\lib");
-        for(String key : map.keySet()){
-            String value = map.get(key);
-            System.out.println("文件名："+key+"   内容："+value);
-        }
+    public static void main(String[] args) throws IOException{
+//        Map<String, String> map = getFilesDatas("D:\\Desktop\\test\\lib");
+//        for(String key : map.keySet()){
+//            String value = map.get(key);
+//            System.out.println("文件名："+key+"   内容："+value);
+//        }
+        getFiles("D:\\Desktop\\test\\lib");
     }
 
+    public static void getFiles(String filePath) throws IOException{
+        File file = new File(filePath);
+        String[] fileNameLists = file.list(); //存储文件名的String数组
+        File[] filePathLists = file.listFiles(); //存储文件路径的String数组
+        for (int i = 0; i < filePathLists.length; i++) {
+            getFileByte(filePathLists[i]);
+        }
+    }
     /**
      * 获取某文件夹下的文件名和文件内容,存入map集合中
      * @param filePath 需要获取的文件的 路径
@@ -76,7 +85,7 @@ public class ReadFile {
     */
     public static long  getFileByte(File file) throws IOException {
         FileInputStream fis  = null;
-        long fileByte = fis.available();
+        long fileByte = 0;
         try {
             if(file.exists() && file.isFile()){
                 String fileName = file.getName();
