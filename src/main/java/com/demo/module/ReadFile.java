@@ -96,5 +96,4 @@ public class ReadFile {
         }
         return fileByte;
     }
-
 }
