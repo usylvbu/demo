@@ -17,7 +17,13 @@ public class ReadFile {
 //        }
         getFiles("D:\\Desktop\\test\\lib");
     }
-
+    /**
+    *@Description 文件输入
+    *@Param void
+    *@Return void
+    *@Author LinZhaoKang.
+    *@Date Created in 2022/12/21 15:35
+    */
     public static void getFiles(String filePath) throws IOException{
         File file = new File(filePath);
         String[] fileNameLists = file.list(); //存储文件名的String数组
@@ -36,7 +42,7 @@ public class ReadFile {
     */
     public static void createCatalogue(String path) throws IOException {
         File outFile = new File(path);
-        if (!outFile.exists()){
+        if (!outFile.exists()){//如果目录不存在则创建目录
             outFile.getParentFile().mkdirs();
         }
     }
@@ -49,13 +55,13 @@ public class ReadFile {
     */
     public static boolean moveFile(String[] fileNameLists, File[] filePathLists) throws IOException {
         if (filePathLists!=null&&fileNameLists!=null){
-            String newPath = PATH+"\\preliminary"+"\\";
+            String newPath = PATH+"\\preliminary"+"\\";//第一次处理前缀
             createCatalogue(newPath);
             for (int i = 0; i < fileNameLists.length; i++) {
-                fileNameLists[i] = newPath.concat(fileNameLists[i]);
-                long fileByte = getFileByte(filePathLists[i]);
-                if(fileByte<1024){
-                    boolean isFileExists = isFileExists(filePathLists[i]);
+                fileNameLists[i] = newPath.concat(fileNameLists[i]);//文件路径拼接
+                long fileByte = getFileByte(filePathLists[i]);//获取文件大小
+                if(fileByte<1024){//文件小于1kb则有可能是废弃的jar包，可以处理
+                    boolean isFileExists = isFileExists(filePathLists[i]);//判断文件是否存在，存在则删除
                     if (isFileExists) {
                         filePathLists[i].renameTo(new File(fileNameLists[i]));
                     }
@@ -78,55 +84,55 @@ public class ReadFile {
         }
         return false;
     }
-    /**
-     * 获取某文件夹下的文件名和文件内容,存入map集合中
-     * @param filePath 需要获取的文件的 路径
-     * @return 返回存储文件名和文件内容的map集合
-     */
-    public static Map<String, String> getFilesDatas(String filePath){
-        Map<String, String> files = new HashMap<>();
-        File file = new File(filePath); //需要获取的文件的路径
-        String[] fileNameLists = file.list(); //存储文件名的String数组
-        File[] filePathLists = file.listFiles(); //存储文件路径的String数组
-        for(int i=0;i<filePathLists.length;i++){
-            if(filePathLists[i].isFile()){
-                try {//读取指定文件路径下的文件内容
-                    String fileDatas = readFile(filePathLists[i]);
-                    //把文件名作为key,文件内容为value 存储在map中
-                    files.put(fileNameLists[i], fileDatas);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return files;
-    }
-    /**
-     * 读取指定目录下的文件
-     * @param path 文件的路径
-     * @return 文件内容
-     * @throws IOException
-     */
-    public static String readFile(File path) throws IOException {
-        //创建一个输入流对象
-        InputStream is = new FileInputStream(path);
-        //定义一个缓冲区
-        byte[] bytes = new byte[1024];// 1kb
-        //通过输入流使用read方法读取数据
-        int len = is.read(bytes);
-        //System.out.println("字节数:"+len);
-        String str = null;
-        while(len!=-1){
-            //把数据转换为字符串
-            str = new String(bytes, 0, len);
-            //System.out.println(str);
-            //继续进行读取
-            len = is.read(bytes);
-        }
-        //释放资源
-        is.close();
-        return str;
-    }
+//    /**
+//     * 获取某文件夹下的文件名和文件内容,存入map集合中
+//     * @param filePath 需要获取的文件的 路径
+//     * @return 返回存储文件名和文件内容的map集合
+//     */
+//    public static Map<String, String> getFilesDatas(String filePath){
+//        Map<String, String> files = new HashMap<>();
+//        File file = new File(filePath); //需要获取的文件的路径
+//        String[] fileNameLists = file.list(); //存储文件名的String数组
+//        File[] filePathLists = file.listFiles(); //存储文件路径的String数组
+//        for(int i=0;i<filePathLists.length;i++){
+//            if(filePathLists[i].isFile()){
+//                try {//读取指定文件路径下的文件内容
+//                    String fileDatas = readFile(filePathLists[i]);
+//                    //把文件名作为key,文件内容为value 存储在map中
+//                    files.put(fileNameLists[i], fileDatas);
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//        return files;
+//    }
+//    /**
+//     * 读取指定目录下的文件
+//     * @param path 文件的路径
+//     * @return 文件内容
+//     * @throws IOException
+//     */
+//    public static String readFile(File path) throws IOException {
+//        //创建一个输入流对象
+//        InputStream is = new FileInputStream(path);
+//        //定义一个缓冲区
+//        byte[] bytes = new byte[1024];// 1kb
+//        //通过输入流使用read方法读取数据
+//        int len = is.read(bytes);
+//        //System.out.println("字节数:"+len);
+//        String str = null;
+//        while(len!=-1){
+//            //把数据转换为字符串
+//            str = new String(bytes, 0, len);
+//            //System.out.println(str);
+//            //继续进行读取
+//            len = is.read(bytes);
+//        }
+//        //释放资源
+//        is.close();
+//        return str;
+//    }
 
     /**
     *@Description 获取文件的大小
