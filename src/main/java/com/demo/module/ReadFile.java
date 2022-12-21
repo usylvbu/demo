@@ -55,11 +55,28 @@ public class ReadFile {
                 fileNameLists[i] = newPath.concat(fileNameLists[i]);
                 long fileByte = getFileByte(filePathLists[i]);
                 if(fileByte<1024){
-                    filePathLists[i].renameTo(new File(fileNameLists[i]));
+                    boolean isFileExists = isFileExists(filePathLists[i]);
+                    if (isFileExists) {
+                        filePathLists[i].renameTo(new File(fileNameLists[i]));
+                    }
                 }
             }
         }
         return true;
+    }
+    /**
+    *@Description 判断文件是否存在，存在就删除，不存在就可以移动
+    *@Param boolean
+    *@Return boolean
+    *@Author LinZhaoKang.
+    *@Date Created in 2022/12/21 15:32
+    */
+    public static boolean isFileExists(File file){
+        if (file.exists()){
+            file.delete();
+            return true;
+        }
+        return false;
     }
     /**
      * 获取某文件夹下的文件名和文件内容,存入map集合中
