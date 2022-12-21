@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ReadFile {
-
+    private final static String PATH = "D:\\Desktop\\test\\lib";
     public static void main(String[] args) throws IOException{
 //        Map<String, String> map = getFilesDatas("D:\\Desktop\\test\\lib");
 //        for(String key : map.keySet()){
@@ -22,9 +22,41 @@ public class ReadFile {
         File file = new File(filePath);
         String[] fileNameLists = file.list(); //存储文件名的String数组
         File[] filePathLists = file.listFiles(); //存储文件路径的String数组
-        for (int i = 0; i < filePathLists.length; i++) {
-            getFileByte(filePathLists[i]);
+//        for (int i = 0; i < filePathLists.length; i++) {
+//            getFileByte(filePathLists[i]);
+//        }
+        moveFile(fileNameLists,filePathLists);
+    }
+    /**
+    *@Description 创建目录
+    *@Param void
+    *@Return boolean
+    *@Author LinZhaoKang.
+    *@Date Created in 2022/12/21 10:15
+    */
+    public static boolean createCatalogue(String path) throws IOException {
+        File outFile = new File(path);
+        if (!outFile.exists()){
+            outFile.getParentFile().mkdir();
+            return true;
+        }else {
+            return false;
         }
+    }
+    public static boolean moveFile(String[] fileNameLists, File[] filePathLists) throws IOException {
+        if (filePathLists!=null&&fileNameLists!=null){
+            String newPath = PATH+"\\preliminary"+"\\"+fileNameLists[0];
+            createCatalogue(newPath);
+            for (int i = 0; i < fileNameLists.length; i++) {
+                fileNameLists[i] = newPath.concat(fileNameLists[i]);
+                long fileByte = getFileByte(filePathLists[i]);
+                if(fileByte<1024){
+                    filePathLists[i].renameTo(new File(fileNameLists[i]));
+                }
+            }
+
+        }
+        return true;
     }
     /**
      * 获取某文件夹下的文件名和文件内容,存入map集合中
@@ -91,6 +123,7 @@ public class ReadFile {
                 String fileName = file.getName();
                 fis = new FileInputStream(file);
                 System.out.println("文件"+fileName+"的大小是："+fis.available()+"\n");
+                fileByte = fis.available();
             }
         } catch (Exception e) {
             e.printStackTrace();
