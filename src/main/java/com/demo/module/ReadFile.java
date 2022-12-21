@@ -30,22 +30,26 @@ public class ReadFile {
     /**
     *@Description 创建目录
     *@Param void
-    *@Return boolean
+    *@Return void
     *@Author LinZhaoKang.
     *@Date Created in 2022/12/21 10:15
     */
-    public static boolean createCatalogue(String path) throws IOException {
+    public static void createCatalogue(String path) throws IOException {
         File outFile = new File(path);
         if (!outFile.exists()){
-            outFile.getParentFile().mkdir();
-            return true;
-        }else {
-            return false;
+            outFile.getParentFile().mkdirs();
         }
     }
+    /**
+    *@Description 将文件大小小于1kb的文件移动到preliminary目录
+    *@Param boolean
+    *@Return boolean
+    *@Author LinZhaoKang.
+    *@Date Created in 2022/12/21 15:03
+    */
     public static boolean moveFile(String[] fileNameLists, File[] filePathLists) throws IOException {
         if (filePathLists!=null&&fileNameLists!=null){
-            String newPath = PATH+"\\preliminary"+"\\"+fileNameLists[0];
+            String newPath = PATH+"\\preliminary"+"\\";
             createCatalogue(newPath);
             for (int i = 0; i < fileNameLists.length; i++) {
                 fileNameLists[i] = newPath.concat(fileNameLists[i]);
@@ -54,7 +58,6 @@ public class ReadFile {
                     filePathLists[i].renameTo(new File(fileNameLists[i]));
                 }
             }
-
         }
         return true;
     }
