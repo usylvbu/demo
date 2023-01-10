@@ -21,13 +21,17 @@ public class ReadFile {
     private final static String PATH_PRELIMINARY = "D:\\Desktop\\test\\lib\\preliminary";
     private final static String PATH_SCREENING = "D:\\Desktop\\test\\lib\\screening";
     public static void main(String[] args) throws IOException{
-        String[] fileNameLists = getFilesNameLists(PATH);
-        File[] filePathLists = getFilesPathLists(PATH);
-        moveFileToPreliminary(fileNameLists,filePathLists);
-        fileNameLists = getFilesNameLists(PATH_PRELIMINARY);
-        filePathLists = getFilesPathLists(PATH_PRELIMINARY);
+        ReadFile readFile = new ReadFile();
+        readFile.createCatalogue(PATH_PRELIMINARY);
+        readFile.createCatalogue(PATH_SCREENING);
+        String[] fileNameLists = readFile.getFilesNameLists(PATH);
+        File[] filePathLists = readFile.getFilesPathLists(PATH);
+        readFile.moveFileToPreliminary(fileNameLists,filePathLists);
+        fileNameLists = readFile.getFilesNameLists(PATH_PRELIMINARY);
+        filePathLists = readFile.getFilesPathLists(PATH_PRELIMINARY);
+        Files.move(Paths.get(PATH_PRELIMINARY+"\\activation-1.1.1.jar"),Paths.get(PATH_SCREENING+"\\activation-1.1.1.jar"),StandardCopyOption.REPLACE_EXISTING);
         for (int i = 0; i < fileNameLists.length; i++) {
-            boolean isMove = moveFileToScreening(fileNameLists[i],filePathLists[i]);
+            boolean isMove = readFile.moveFileToScreening(fileNameLists[i],filePathLists[i]);
             if (isMove){
                 System.out.println("成功");
             }else{
@@ -42,14 +46,14 @@ public class ReadFile {
     *@Author LinZhaoKang.
     *@Date Created in 2023/1/9 10:28
     */
-    public static String[] getFilesNameLists(String filePath) throws IOException{
+    public  String[] getFilesNameLists(String filePath) throws IOException{
         File file = new File(filePath);
         //存储文件名的String数组
         String[] fileNameLists = file.list();
         return fileNameLists;
 
     }
-    public static File[] getFilesPathLists(String filePath) throws IOException{
+    public  File[] getFilesPathLists(String filePath) throws IOException{
         File file = new File(filePath);
         //存储文件路径的String数组
         File[] filePathLists = file.listFiles();
@@ -62,8 +66,8 @@ public class ReadFile {
     *@Author LinZhaoKang.
     *@Date Created in 2022/12/21 10:15
     */
-    public static void createCatalogue(String path) throws IOException {
-        File outFile = new File(path+"test.txt");
+    public  void createCatalogue(String path) throws IOException {
+        File outFile = new File(path+"\\test.txt");
         //如果目录不存在则创建目录
         if (!outFile.exists()){
             outFile.getParentFile().mkdirs();
@@ -76,11 +80,11 @@ public class ReadFile {
     *@Author LinZhaoKang.
     *@Date Created in 2022/12/21 15:03
     */
-    public static boolean moveFileToPreliminary(String[] fileNameLists, File[] filePathLists) throws IOException {
+    public  boolean moveFileToPreliminary(String[] fileNameLists, File[] filePathLists) throws IOException {
+        createCatalogue(PATH_SCREENING);
         if (filePathLists!=null&&fileNameLists!=null){
-            //第一次处理前缀
-            String newPath = PATH+"\\preliminary"+"\\";
-            createCatalogue(newPath);
+            //第一次处理
+            String newPath = PATH_PRELIMINARY+"\\";
             for (int i = 0; i < fileNameLists.length; i++) {
                 //文件路径拼接
                 fileNameLists[i] = newPath.concat(fileNameLists[i]);
@@ -105,14 +109,14 @@ public class ReadFile {
     *@Author LinZhaoKang.
     *@Date Created in 2023/1/9 13:48
     */
-    public static boolean moveFileToScreening(String fileName, File file) throws IOException {
+    public  boolean moveFileToScreening(String fileName, File file) throws IOException {
         try {
             URL url=new URL("jar:file:"+PATH+"\\preliminary\\"+fileName+"!/Test.class");
+            Files.move(Paths.get(PATH_PRELIMINARY+"\\activation-1.1.1.jar"),Paths.get(PATH_SCREENING+"\\activation-1.1.1.jar"),StandardCopyOption.REPLACE_EXISTING);
             InputStream is=url.openStream();
             byte[] b =new byte[1000];
             is.read(b);
             is.close();
-            createCatalogue(PATH_SCREENING+"\\");
             Path sDir = Paths.get(PATH_PRELIMINARY, file.getName());
             Path tDir = Paths.get(PATH_SCREENING, fileName);
             Files.move(sDir,tDir,StandardCopyOption.REPLACE_EXISTING);
@@ -131,9 +135,9 @@ public class ReadFile {
     *@Author LinZhaoKang.
     *@Date Created in 2022/12/21 15:32
     */
-    public static boolean isFileExists(File file){
+    public  boolean isFileExists(File file){
         if (file.exists()){
-            file.delete();
+//            file.delete();
             return true;
         }
         return false;
@@ -145,7 +149,7 @@ public class ReadFile {
     *@Author LinZhaoKang.
     *@Date Created in 2022/12/13 9:44
     */
-    public static long  getFileByte(File file) throws IOException {
+    public  long  getFileByte(File file) throws IOException {
         FileInputStream fis  = null;
         long fileByte = 0;
         try {
