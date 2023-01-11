@@ -21,6 +21,34 @@ public class ReadFile {
     private final static String PATH = "D:/Desktop/test/lib";
     private final static String PATH_PRELIMINARY = "D:/Desktop/test/lib/preliminary";
     private final static String PATH_SCREENING = "D:/Desktop/test/lib/screening";
+    private String path;
+    private String path_preliminary;
+    private String path_screening;
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getPath_preliminary() {
+        return path_preliminary;
+    }
+
+    public void setPath_preliminary(String path_preliminary) {
+        this.path_preliminary = path_preliminary;
+    }
+
+    public String getPath_screening() {
+        return path_screening;
+    }
+
+    public void setPath_screening(String path_screening) {
+        this.path_screening = path_screening;
+    }
+/*
     public static void main(String[] args) throws IOException{
         ReadFile readFile = new ReadFile();
         readFile.createCatalogue(PATH_PRELIMINARY);
@@ -33,11 +61,18 @@ public class ReadFile {
         for (int i = 0; i < fileNameLists.length; i++) {
             boolean isMove = readFile.moveJarToScreening(fileNameLists[i],filePathLists[i]);
             if (isMove){
-                System.out.println("成功");
+                System.out.println("移动成功");
             }else{
-                System.out.println("失败");
+                System.out.println("移动失败");
             }
         }
+    }
+ */
+    public void init(String path) throws IOException {
+        this.path_preliminary = path+"/preliminary";
+        this.path_screening = path+"/screening";
+        createCatalogue(this.path_preliminary);
+        createCatalogue(this.path_screening);
     }
     /**
     *@Description 将废弃的jar包移动到screening文件夹
@@ -48,7 +83,7 @@ public class ReadFile {
     *@Modified By: LinZhaoKang.
     *@ModifiedDate:
     */
-    private boolean moveJarToScreening(String fileName, File filePath) throws IOException {
+    public boolean moveJarToScreening(String fileName, File filePath) throws IOException {
         try {
             if (filePath.exists()) {
                 // 创建一个指向jar文件里一个入口的URL
@@ -61,7 +96,7 @@ public class ReadFile {
                 // 得到jar文件的入口
                 JarEntry jarEntry = conn.getJarEntry();
                 jarfile.close();
-                filePath.renameTo(new File(PATH_SCREENING,fileName));
+                filePath.renameTo(new File(this.getPath_preliminary(),fileName));
                 return true;
             }else{
                 return false;
@@ -134,7 +169,7 @@ public class ReadFile {
     public  boolean moveFileToPreliminary(String[] fileNameLists, File[] filePathLists) throws IOException {
         if (filePathLists!=null&&fileNameLists!=null){
             //第一次处理
-            String newPath = PATH_PRELIMINARY+"\\";
+            String newPath = this.getPath_preliminary()+"\\";
             for (int i = 0; i < fileNameLists.length; i++) {
                 //文件路径拼接
                 fileNameLists[i] = newPath.concat(fileNameLists[i]);
