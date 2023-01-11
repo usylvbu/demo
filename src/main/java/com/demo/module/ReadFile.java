@@ -1,14 +1,15 @@
 package com.demo.module;
 
+import com.demo.Test;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.net.JarURLConnection;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * @Author: LinZhaoKang.
@@ -17,9 +18,9 @@ import java.nio.file.StandardCopyOption;
  * @Modified By:
  */
 public class ReadFile {
-    private final static String PATH = "D:\\Desktop\\test\\lib";
-    private final static String PATH_PRELIMINARY = "D:\\Desktop\\test\\lib\\preliminary";
-    private final static String PATH_SCREENING = "D:\\Desktop\\test\\lib\\screening";
+    private final static String PATH = "D:/Desktop/test/lib";
+    private final static String PATH_PRELIMINARY = "D:/Desktop/test/lib/preliminary";
+    private final static String PATH_SCREENING = "D:/Desktop/test/lib/screening";
     public static void main(String[] args) throws IOException{
         ReadFile readFile = new ReadFile();
         readFile.createCatalogue(PATH_PRELIMINARY);
@@ -29,9 +30,8 @@ public class ReadFile {
         readFile.moveFileToPreliminary(fileNameLists,filePathLists);
         fileNameLists = readFile.getFilesNameLists(PATH_PRELIMINARY);
         filePathLists = readFile.getFilesPathLists(PATH_PRELIMINARY);
-        Files.move(Paths.get(PATH_PRELIMINARY+"\\activation-1.1.1.jar"),Paths.get(PATH_SCREENING+"\\activation-1.1.1.jar"),StandardCopyOption.REPLACE_EXISTING);
         for (int i = 0; i < fileNameLists.length; i++) {
-            boolean isMove = readFile.moveFileToScreening(fileNameLists[i],filePathLists[i]);
+            boolean isMove = readFile.moveJarToScreening(fileNameLists[i],filePathLists[i]);
             if (isMove){
                 System.out.println("成功");
             }else{
@@ -39,6 +39,48 @@ public class ReadFile {
             }
         }
     }
+    /**
+    *@Description 将废弃的jar包移动到screening文件夹
+    *@Param boolean
+    *@Return boolean
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/1/11 15:29
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
+    private boolean moveJarToScreening(String fileName, File filePath) throws IOException {
+        try {
+            if (filePath.exists()) {
+                // 创建一个指向jar文件里一个入口的URL
+                URL url = new URL("jar:file:/"+filePath.getPath()+"!/Test.class");
+                // 读取jar文件
+                JarURLConnection conn = (JarURLConnection) url.openConnection();
+                JarFile jarfile = conn.getJarFile();
+                // 此时的入口名字应该和指定的URL相同
+                String entryName = conn.getEntryName();
+                // 得到jar文件的入口
+                JarEntry jarEntry = conn.getJarEntry();
+                jarfile.close();
+                filePath.renameTo(new File(PATH_SCREENING,fileName));
+                return true;
+            }else{
+                return false;
+            }
+
+        } catch (MalformedURLException e) {
+            System.out.println(e);
+        } catch (IOException e) {
+            if (e.getMessage().contains("not found")){
+                System.out.printf("大小小于1kb的未废弃文件");
+            } else if (e.getMessage().contains("拒绝访问")) {
+                System.out.printf("文件夹",e.getMessage());
+            }else{
+                System.out.println(e);
+            }
+        }
+        return false;
+    }
+
     /**
     *@Description 获取文件夹内所有文件的文件名
     *@Param String
@@ -53,6 +95,15 @@ public class ReadFile {
         return fileNameLists;
 
     }
+    /**
+    *@Description 获取文件夹内所有文件的路径
+    *@Param File
+    *@Return java.io.File[]
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/1/11 15:27
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
     public  File[] getFilesPathLists(String filePath) throws IOException{
         File file = new File(filePath);
         //存储文件路径的String数组
@@ -81,7 +132,6 @@ public class ReadFile {
     *@Date Created in 2022/12/21 15:03
     */
     public  boolean moveFileToPreliminary(String[] fileNameLists, File[] filePathLists) throws IOException {
-        createCatalogue(PATH_SCREENING);
         if (filePathLists!=null&&fileNameLists!=null){
             //第一次处理
             String newPath = PATH_PRELIMINARY+"\\";
@@ -95,38 +145,14 @@ public class ReadFile {
                     //判断文件是否存在，存在则删除
                     boolean isFileExists = isFileExists(filePathLists[i]);
                     if (isFileExists) {
-                        filePathLists[i].renameTo(new File(fileNameLists[i]));
+                        if(!filePathLists[i].isDirectory()) {
+                            filePathLists[i].renameTo(new File(fileNameLists[i]));
+                        }
                     }
                 }
             }
         }
         return true;
-    }
-    /**
-    *@Description 将废弃的jar包移动到screening目录
-    *@Param boolean
-    *@Return boolean
-    *@Author LinZhaoKang.
-    *@Date Created in 2023/1/9 13:48
-    */
-    public  boolean moveFileToScreening(String fileName, File file) throws IOException {
-        try {
-            URL url=new URL("jar:file:"+PATH+"\\preliminary\\"+fileName+"!/Test.class");
-            Files.move(Paths.get(PATH_PRELIMINARY+"\\activation-1.1.1.jar"),Paths.get(PATH_SCREENING+"\\activation-1.1.1.jar"),StandardCopyOption.REPLACE_EXISTING);
-            InputStream is=url.openStream();
-            byte[] b =new byte[1000];
-            is.read(b);
-            is.close();
-            Path sDir = Paths.get(PATH_PRELIMINARY, file.getName());
-            Path tDir = Paths.get(PATH_SCREENING, fileName);
-            Files.move(sDir,tDir,StandardCopyOption.REPLACE_EXISTING);
-            return true;
-        }catch (Exception e){
-            System.out.println(file.exists());
-            file.renameTo(new File(PATH,fileName));
-            System.out.println("这是正在使用的jar包");
-        }
-        return false;
     }
     /**
     *@Description 判断文件是否存在，存在就删除，不存在就可以移动
