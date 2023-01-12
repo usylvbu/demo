@@ -18,6 +18,8 @@ public class JarFilterTool {
         ReadFile readFile = new ReadFile();
         String directoriesPath = jarFilterTool.getDirectoriesPath();
         readFile.init(directoriesPath);
+        jarFilterTool.outObsoleteJarsFilter(readFile);
+        System.exit(1);
     }
 
     public String getDirectoriesPath(){

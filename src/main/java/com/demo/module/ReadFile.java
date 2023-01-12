@@ -69,6 +69,7 @@ public class ReadFile {
     }
  */
     public void init(String path) throws IOException {
+        this.path = path;
         this.path_preliminary = path+"/preliminary";
         this.path_screening = path+"/screening";
         createCatalogue(this.path_preliminary);
@@ -96,7 +97,7 @@ public class ReadFile {
                 // 得到jar文件的入口
                 JarEntry jarEntry = conn.getJarEntry();
                 jarfile.close();
-                filePath.renameTo(new File(this.getPath_preliminary(),fileName));
+                filePath.renameTo(new File(this.getPath_screening(),fileName));
                 return true;
             }else{
                 return false;
@@ -106,7 +107,7 @@ public class ReadFile {
             System.out.println(e);
         } catch (IOException e) {
             if (e.getMessage().contains("not found")){
-                System.out.printf("大小小于1kb的未废弃文件");
+                System.out.println("大小小于1kb的未废弃文件");
             } else if (e.getMessage().contains("拒绝访问")) {
                 System.out.printf("文件夹",e.getMessage());
             }else{
@@ -153,7 +154,7 @@ public class ReadFile {
     *@Date Created in 2022/12/21 10:15
     */
     public  void createCatalogue(String path) throws IOException {
-        File outFile = new File(path+"\\test.txt");
+        File outFile = new File(path+"/test.txt");
         //如果目录不存在则创建目录
         if (!outFile.exists()){
             outFile.getParentFile().mkdirs();
