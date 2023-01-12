@@ -21,7 +21,15 @@ public class JarFilterTool {
         jarFilterTool.outObsoleteJarsFilter(readFile);
         System.exit(1);
     }
-
+    /**
+    *@Description 可视化窗口读取jar包文件夹
+    *@Param String
+    *@Return java.lang.String
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/1/12 9:54
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
     public String getDirectoriesPath(){
         // 创建一个JFrame组件为parent组件
         JFrame frame = new JFrame();
@@ -36,6 +44,15 @@ public class JarFilterTool {
         }
         return chooser.getSelectedFile().getPath();
     }
+    /**
+    *@Description 筛选废弃jar包
+    *@Param boolean
+    *@Return boolean
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/1/12 9:55
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
     public boolean outObsoleteJarsFilter(ReadFile readFile) throws IOException {
         String[] fileNameLists = readFile.getFilesNameLists(readFile.getPath());
         File[] filePathLists = readFile.getFilesPathLists(readFile.getPath());
