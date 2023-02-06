@@ -42,6 +42,7 @@ public class JarFilterTool {
         if (flag == JFileChooser.APPROVE_OPTION) {
             System.out.println("用户选择了文件：" + chooser.getSelectedFile().getPath());
         }
+//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         return chooser.getSelectedFile().getPath();
     }
     /**

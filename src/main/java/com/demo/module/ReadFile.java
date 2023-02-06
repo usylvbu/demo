@@ -1,6 +1,8 @@
 package com.demo.module;
 
-import com.demo.Test;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.FileHeader;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,6 +10,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.JarURLConnection;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -24,6 +29,15 @@ public class ReadFile {
     private String path;
     private String path_preliminary;
     private String path_screening;
+    private String path_contain_version_inf;
+
+    public String getPath_contain_version_inf() {
+        return path_contain_version_inf;
+    }
+
+    public void setPath_contain_version_inf(String path_contain_version_inf) {
+        this.path_contain_version_inf = path_contain_version_inf;
+    }
 
     public String getPath() {
         return path;
@@ -68,12 +82,30 @@ public class ReadFile {
         }
     }
  */
+    public static void main(String[] args) throws IOException, ZipException {
+        ReadFile readFile = new ReadFile();
+        readFile.init(PATH);
+        File[] filesPathLists = readFile.getFilesPathLists(PATH);
+        readFile.removeJarVersionInf(filesPathLists);
+
+    }
+    /**
+    *@Description 初始化
+    *@Param void
+    *@Return void
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/1/12 10:12
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
     public void init(String path) throws IOException {
         this.path = path;
         this.path_preliminary = path+"/preliminary";
         this.path_screening = path+"/screening";
+        this.path_contain_version_inf = path+"/contain_version_inf";
         createCatalogue(this.path_preliminary);
         createCatalogue(this.path_screening);
+        createCatalogue(this.path_contain_version_inf);
     }
     /**
     *@Description 将废弃的jar包移动到screening文件夹
@@ -199,7 +231,7 @@ public class ReadFile {
     */
     public  boolean isFileExists(File file){
         if (file.exists()){
-//            file.delete();
+            file.delete();
             return true;
         }
         return false;
@@ -233,5 +265,114 @@ public class ReadFile {
             }
         }
         return fileByte;
+    }
+    /**
+    *@Description 移除jar包内的版本信息(v1)
+    *@Param boolean
+    *@Return boolean
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/1/13 15:22
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
+    public boolean removeJarVersionInf(File[] filePathLists) throws IOException, ZipException {
+        for (int i = 0; i < filePathLists.length; i++) {
+            boolean isContain = isContainVersionInf(filePathLists[i]);
+            if (isContain) {
+                isFileExists(new File(this.path_contain_version_inf+"/"+filePathLists[i].getName()));
+                Files.copy(filePathLists[i].toPath(), Paths.get(this.path_contain_version_inf + "/" + filePathLists[i].getName()));
+                deleteJarVersionInf(filePathLists[i]);
+            }
+        }
+
+        return true;
+    }
+    /**
+    *@Description 删除版本信息文件
+    *@Param boolean
+    *@Return boolean
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/1/13 15:23
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
+    public boolean deleteJarVersionInf(File file)throws ZipException {
+        //比如目录：111/22，所以加了个/
+        String delFolder = file.getParent();
+        delFolder += "/";
+        String zipFile = file.getPath();
+        ZipFile zip = new ZipFile(zipFile);
+        zip.setFileNameCharset("UTF-8");
+//        checkZipFile(zip);
+        //先判断要删除的文件夹是否存在
+         /*FileHeader dirHeader = zip.getFileHeader(delFolder);
+         if (dirHeader==null) {
+         System.err.println("没有找到你要删除的文件夹,路径：" + zipFile);
+         return;
+         }*/
+        List<FileHeader> list = zip.getFileHeaders();
+        String dname = "";
+        boolean isSucess = false;
+        for (int i = 0; i < list.size(); i++) {
+            // 遍历压缩包中文件目录
+            dname = list.get(i).getFileName();
+            //System.out.println(dname);
+
+            if (true) {
+                if ((dname.startsWith("META-INF/") && dname.contains("maven")) || dname.equals("META-INF/MANIFEST.MF")) {
+                    // System.out.println(dname);
+                    //if (dname.startsWith(delFolder)) {
+                    zip.removeFile(dname);
+                    isSucess = true;
+                    //解决移位问题
+                    i--;
+                }
+            } else {
+             /*if (dname.equals("META-INF/MANIFEST.MF")) {
+             zip.removeFile(dname);
+             isSucess = true;
+             //解决移位问题
+             i--;
+             }*/
+             /*if (dname.startsWith(delFolder)) {
+             zip.removeFile(dname);
+             isSucess = true;
+             //解决移位问题
+             i--;
+             }*/
+            }
+
+        }
+        if (!isSucess) {
+            System.err.println("未找到需要删除的maven或者META-INF/MANIFEST.MF文件，路径：" + zipFile);
+        }
+        isSucess = false;
+        return true;
+    }
+    /**
+    *@Description 是否含有版本信息文件
+    *@Param boolean
+    *@Return boolean
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/1/13 15:23
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
+    private boolean isContainVersionInf(File file) {
+        try {
+            if (file.exists()&&!file.isDirectory()){
+                URL url = new URL("jar:file:/"+file.getPath()+"!/META-INF/MANIFEST.MF");
+                // 读取jar文件
+                JarURLConnection conn = (JarURLConnection) url.openConnection();
+                JarFile jarfile = conn.getJarFile();
+                jarfile.close();
+                return true;
+            }else {
+                return false;
+            }
+        }catch (IOException e){
+            System.out.println(file.getName()+"此jar包已废弃或已修复过了");
+            return false;
+        }
     }
 }
