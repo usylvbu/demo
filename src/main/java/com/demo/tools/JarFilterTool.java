@@ -1,6 +1,7 @@
 package com.demo.tools;
 
 import com.demo.module.ReadFile;
+import net.lingala.zip4j.exception.ZipException;
 
 import javax.swing.*;
 import java.io.File;
@@ -13,12 +14,13 @@ import java.io.IOException;
  * @Modified By: LinZhaoKang.
  */
 public class JarFilterTool {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ZipException {
         JarFilterTool jarFilterTool = new JarFilterTool();
         ReadFile readFile = new ReadFile();
         String directoriesPath = jarFilterTool.getDirectoriesPath();
         readFile.init(directoriesPath);
         jarFilterTool.outObsoleteJarsFilter(readFile);
+        readFile.removeJarVersionInf(readFile.getFilesPathLists(directoriesPath));
         System.exit(1);
     }
     /**
@@ -60,12 +62,14 @@ public class JarFilterTool {
         readFile.moveFileToPreliminary(fileNameLists,filePathLists);
         fileNameLists = readFile.getFilesNameLists(readFile.getPath_preliminary());
         filePathLists = readFile.getFilesPathLists(readFile.getPath_preliminary());
-        for (int i = 0; i < fileNameLists.length; i++) {
-            boolean isMove = readFile.moveJarToScreening(fileNameLists[i],filePathLists[i]);
-            if (isMove){
-                System.out.println("移动成功");
-            }else{
-                System.out.println("移动失败");
+        if (filePathLists!=null&&fileNameLists!=null) {
+            for (int i = 0; i < fileNameLists.length; i++) {
+                boolean isMove = readFile.moveJarToScreening(fileNameLists[i], filePathLists[i]);
+                if (isMove) {
+                    System.out.println("移动成功");
+                } else {
+                    System.out.println("移动失败");
+                }
             }
         }
         return true;

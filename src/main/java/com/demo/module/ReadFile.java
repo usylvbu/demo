@@ -82,13 +82,13 @@ public class ReadFile {
         }
     }
  */
-    public static void main(String[] args) throws IOException, ZipException {
-        ReadFile readFile = new ReadFile();
-        readFile.init(PATH);
-        File[] filesPathLists = readFile.getFilesPathLists(PATH);
-        readFile.removeJarVersionInf(filesPathLists);
-
-    }
+//    public static void main(String[] args) throws IOException, ZipException {
+//        ReadFile readFile = new ReadFile();
+//        readFile.init(PATH);
+//        File[] filesPathLists = readFile.getFilesPathLists(PATH);
+//        readFile.removeJarVersionInf(filesPathLists);
+//
+//    }
     /**
     *@Description 初始化
     *@Param void
@@ -231,7 +231,6 @@ public class ReadFile {
     */
     public  boolean isFileExists(File file){
         if (file.exists()){
-            file.delete();
             return true;
         }
         return false;
@@ -279,7 +278,10 @@ public class ReadFile {
         for (int i = 0; i < filePathLists.length; i++) {
             boolean isContain = isContainVersionInf(filePathLists[i]);
             if (isContain) {
-                isFileExists(new File(this.path_contain_version_inf+"/"+filePathLists[i].getName()));
+                boolean isFileExists = isFileExists(new File(this.path_contain_version_inf + "/" + filePathLists[i].getName()));
+                if (isFileExists) {
+                    filePathLists[i].delete();
+                }
                 Files.copy(filePathLists[i].toPath(), Paths.get(this.path_contain_version_inf + "/" + filePathLists[i].getName()));
                 deleteJarVersionInf(filePathLists[i]);
             }
