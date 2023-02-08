@@ -6,6 +6,8 @@ import net.lingala.zip4j.exception.ZipException;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * @Author: LinZhaoKang.
@@ -71,7 +73,48 @@ public class JarFilterTool {
                     System.out.println("移动失败");
                 }
             }
+            File file = new File(readFile.getPath_preliminary());
+            if(file.isDirectory()){
+                if(file.list().length>0){
+                    System.out.println("目录不为空!");
+                    fileNameLists = readFile.getFilesNameLists(readFile.getPath_preliminary());
+                    filePathLists = readFile.getFilesPathLists(readFile.getPath_preliminary());
+                    for (int i = 0; i < fileNameLists.length; i++) {
+//                        filePathLists[i].renameTo(new File(readFile.getPath(),fileNameLists[i]));
+                        Files.copy(filePathLists[i].toPath(), Paths.get(readFile.getPath() + "/" + filePathLists[i].getName()));
+                    }
+                    System.out.println("移动成功");
+                }else{
+                    System.out.println("目录为空!");
+                }
+            }else{
+                System.out.println("这不是一个目录!");
+            }
         }
         return true;
+    }
+    /**
+    *@Description 判断目录是否为空
+    *@Param boolean
+    *@Return boolean
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/2/6 17:19
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
+    public boolean isDirectoryEmpty(String filePath){
+        File file = new File(filePath);
+        if(file.isDirectory()){
+            if(file.list().length>0){
+                System.out.println("目录不为空!");
+                return false;
+            }else{
+                System.out.println("目录为空!");
+                return true;
+            }
+        }else{
+            System.out.println("这不是一个目录!");
+            return true;
+        }
     }
 }
