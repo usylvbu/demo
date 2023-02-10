@@ -188,10 +188,36 @@ public class ReadFile {
     public  void createCatalogue(String path) throws IOException {
         File outFile = new File(path+"/test.txt");
         //如果目录不存在则创建目录
-        if (!outFile.exists()){
+        if (!outFile.getParentFile().exists()){
             outFile.getParentFile().mkdirs();
         }
+//        else{
+//            boolean isDeleteDir = deleteDir(outFile.getParentFile());
+//            if (isDeleteDir) {
+//                System.out.println("初始化删除"+path);
+//            }else{
+//                System.out.println("初始化失败");
+//            }
+//            createCatalogue(path);
+//        }
     }
+    /*
+    private static boolean deleteDir(File dir) {
+
+        if (dir.isDirectory()) {
+            String[] children = dir.list();
+            //递归删除子目录
+            for (int i=0; i<children.length; i++) {
+                boolean success = deleteDir(new File(dir, children[i]));
+                if (!success) {
+                    return false;
+                }
+            }
+        }
+        // 目录此时为空，可以删除
+        return dir.delete();
+    }
+     */
     /**
     *@Description 将文件大小小于1kb的文件移动到preliminary目录
     *@Param boolean

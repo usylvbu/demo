@@ -4,6 +4,11 @@ import com.demo.module.ReadFile;
 import net.lingala.zip4j.exception.ZipException;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,13 +22,98 @@ import java.nio.file.Paths;
  */
 public class JarFilterTool {
     public static void main(String[] args) throws IOException, ZipException {
+//        System.out.println("欢迎使jar包扫描工具");
+//        System.out.println("*****preliminary目录为仍保存版本信息的jar包备份*****");
+//        System.out.println("*****screening为被废弃的jar包备份*****");
+//        System.out.println("*****contain_version_inf是仍保存版本信息的jar包备份*****");
+//        try{
+//            JarFilterTool jarFilterTool = new JarFilterTool();
+//            ReadFile readFile = new ReadFile();
+//            String directoriesPath = jarFilterTool.getDirectoriesPath();
+//            readFile.init(directoriesPath);
+//            jarFilterTool.outObsoleteJarsFilter(readFile);
+//            readFile.removeJarVersionInf(readFile.getFilesPathLists(directoriesPath));
+//        }catch (Exception e){
+//            System.out.println(e);
+//            System.exit(1);
+//        }
+//        System.exit(1);
         JarFilterTool jarFilterTool = new JarFilterTool();
-        ReadFile readFile = new ReadFile();
-        String directoriesPath = jarFilterTool.getDirectoriesPath();
-        readFile.init(directoriesPath);
-        jarFilterTool.outObsoleteJarsFilter(readFile);
-        readFile.removeJarVersionInf(readFile.getFilesPathLists(directoriesPath));
-        System.exit(1);
+        jarFilterTool.createJFrame();
+
+    }
+    /**
+    *@Description 扫描jar包功能
+    *@Param void
+    *@Return void
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/2/10 14:13
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
+    public void scanJarFile(){
+        System.out.println("欢迎使jar包扫描工具");
+        System.out.println("*****preliminary目录为仍保存版本信息的jar包备份*****");
+        System.out.println("*****screening为被废弃的jar包备份*****");
+        System.out.println("*****contain_version_inf是仍保存版本信息的jar包备份*****");
+        try{
+            JarFilterTool jarFilterTool = new JarFilterTool();
+            ReadFile readFile = new ReadFile();
+            String directoriesPath = jarFilterTool.getDirectoriesPath();
+            //初始化路径，生成目录
+            readFile.init(directoriesPath);
+            //筛选废弃jar包
+            jarFilterTool.outObsoleteJarsFilter(readFile);
+            //移除版本信息
+            readFile.removeJarVersionInf(readFile.getFilesPathLists(directoriesPath));
+        }catch (Exception e){
+            System.out.println(e);
+            //如果报错，强行停止程序
+            System.exit(1);
+        }
+        System.exit(0);
+    }
+    /**
+    *@Description 创建面板
+    *@Param void
+    *@Return void
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/2/10 14:13
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
+    public void createJFrame(){
+        Frame fr = new Frame("Hello");
+        fr.setSize(500,500);
+        fr.setBackground(Color.white);
+        fr.setLayout(null);
+        fr.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                System.exit(0);
+            }
+        });
+        Panel pan = new Panel();
+        pan.setSize(200,200);
+        pan.setBackground(Color.gray);
+        pan.setLocation(50,50);
+        pan.setLayout(null);
+        pan.setBounds((fr.getWidth()-pan.getWidth()-5)/2,(fr.getHeight()-28-pan.getHeight())/2,200,200);
+        Button button = new Button();
+        button.setLabel("jar包扫描");
+        button.setName("jar包扫描");
+        button.setSize(100,50);
+        button.setBounds((pan.getWidth()-button.getWidth()-5)/2,(pan.getHeight()-28-button.getHeight())/2,100,50);
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                scanJarFile();
+            }
+        });
+        pan.add(button);
+        fr.add(pan);
+        fr.setVisible(true);
     }
     /**
     *@Description 可视化窗口读取jar包文件夹
@@ -46,7 +136,8 @@ public class JarFilterTool {
         if (flag == JFileChooser.APPROVE_OPTION) {
             System.out.println("用户选择了文件：" + chooser.getSelectedFile().getPath());
         }
-//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        frame.setDefaultCloseOperation(2);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         return chooser.getSelectedFile().getPath();
     }
     /**
@@ -68,9 +159,9 @@ public class JarFilterTool {
             for (int i = 0; i < fileNameLists.length; i++) {
                 boolean isMove = readFile.moveJarToScreening(fileNameLists[i], filePathLists[i]);
                 if (isMove) {
-                    System.out.println("移动成功");
+                    System.out.println(fileNameLists[i]+"移动成功");
                 } else {
-                    System.out.println("移动失败");
+                    System.out.println(fileNameLists[i]+"移动失败");
                 }
             }
             File file = new File(readFile.getPath_preliminary());
@@ -85,10 +176,10 @@ public class JarFilterTool {
                     }
                     System.out.println("移动成功");
                 }else{
-                    System.out.println("目录为空!");
+                    System.out.println(file.getName()+"目录为空!");
                 }
             }else{
-                System.out.println("这不是一个目录!");
+                System.out.println(file.getName()+"这不是一个目录!");
             }
         }
         return true;
