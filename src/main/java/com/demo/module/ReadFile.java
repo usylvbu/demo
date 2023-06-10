@@ -12,9 +12,12 @@ import java.net.URL;
 import java.net.JarURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
+import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 /**
  * @Author: LinZhaoKang.
@@ -26,11 +29,13 @@ public class ReadFile {
     private final static String PATH = "D:/Desktop/test/lib";
     private final static String PATH_PRELIMINARY = "D:/Desktop/test/lib/preliminary";
     private final static String PATH_SCREENING = "D:/Desktop/test/lib/screening";
+    private final static String[] WHITE_PATH = {"keys"};
     private String path;
     private String path_preliminary;
     private String path_screening;
     private String path_contain_version_inf;
-
+    //不需要处理的文件白名单
+    private List<String> unMoveFile = null;
     public String getPath_contain_version_inf() {
         return path_contain_version_inf;
     }
@@ -230,13 +235,19 @@ public class ReadFile {
             //第一次处理
             String newPath = this.getPath_preliminary()+"\\";
             for (int i = 0; i < fileNameLists.length; i++) {
+                for (String whiteFile:WHITE_PATH) {
+                    //如果文件名处于白名单中则不处理
+                    if (fileNameLists[i].startsWith(whiteFile) || !fileNameLists[i].endsWith(".jar")){
+                        continue;
+                    }
+                }
                 //文件路径拼接
                 fileNameLists[i] = newPath.concat(fileNameLists[i]);
                 //获取文件大小
                 long fileByte = getFileByte(filePathLists[i]);
                 //文件小于1kb则有可能是废弃的jar包，可以处理
                 if(fileByte<1024){
-                    //判断文件是否存在，存在则删除
+                    //判断文件是否存在preliminary目录，存在则不动
                     boolean isFileExists = isFileExists(filePathLists[i]);
                     if (isFileExists) {
                         if(!filePathLists[i].isDirectory()) {
@@ -309,11 +320,34 @@ public class ReadFile {
                     filePathLists[i].delete();
                 }
                 Files.copy(filePathLists[i].toPath(), Paths.get(this.path_contain_version_inf + "/" + filePathLists[i].getName()));
+                readerJarVersion(filePathLists[i].getPath());
                 deleteJarVersionInf(filePathLists[i]);
             }
         }
 
         return true;
+    }
+
+    public void readerJarVersion(String jarFilePath){
+        JarFile jarFile = null;
+        try {
+//            String jarFilePath = "path/to/your/jar/file.jar";
+//            jarFile = new JarFile(jarFilePath);
+            Manifest manifest = jarFile.getManifest();
+            Attributes attrs = manifest.getMainAttributes();
+            String version = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+            System.out.println("JarName="+jarFilePath+"Version: " + version);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (jarFile != null) {
+                try {
+                    jarFile.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
     /**
     *@Description 删除版本信息文件
@@ -400,6 +434,24 @@ public class ReadFile {
             }
         }catch (IOException e){
             System.out.println(file.getName()+"此jar包已废弃或已修复过了");
+            return false;
+        }
+    }
+    /**
+    *@Description 删除文件
+    *@Param boolean
+    *@Return boolean
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/4/27 16:25
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate:
+    */
+    public boolean deleteFile(String filePath){
+        File file = new File(filePath);
+        if (file.exists()){
+            file.delete();
+            return true;
+        }else {
             return false;
         }
     }

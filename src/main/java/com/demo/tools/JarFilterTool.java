@@ -1,5 +1,7 @@
 package com.demo.tools;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.demo.module.ReadFile;
 import net.lingala.zip4j.exception.ZipException;
 
@@ -22,26 +24,27 @@ import java.nio.file.Paths;
  */
 public class JarFilterTool {
     public static void main(String[] args) throws IOException, ZipException {
-//        System.out.println("欢迎使jar包扫描工具");
-//        System.out.println("*****preliminary目录为仍保存版本信息的jar包备份*****");
-//        System.out.println("*****screening为被废弃的jar包备份*****");
-//        System.out.println("*****contain_version_inf是仍保存版本信息的jar包备份*****");
-//        try{
-//            JarFilterTool jarFilterTool = new JarFilterTool();
-//            ReadFile readFile = new ReadFile();
-//            String directoriesPath = jarFilterTool.getDirectoriesPath();
-//            readFile.init(directoriesPath);
-//            jarFilterTool.outObsoleteJarsFilter(readFile);
-//            readFile.removeJarVersionInf(readFile.getFilesPathLists(directoriesPath));
-//        }catch (Exception e){
-//            System.out.println(e);
-//            System.exit(1);
-//        }
-//        System.exit(1);
-        JarFilterTool jarFilterTool = new JarFilterTool();
-        jarFilterTool.createJFrame();
 
-    }
+//    System.out.println("欢迎使jar包扫描工具");
+//    System.out.println("*****preliminary目录为仍保存版本信息的jar包备份*****");
+//    System.out.println("*****screening为被废弃的jar包备份*****");
+//    System.out.println("*****contain_version_inf是仍保存版本信息的jar包备份*****");
+//    try{
+//        JarFilterTool jarFilterTool = new JarFilterTool();
+//        ReadFile readFile = new ReadFile();
+//        String directoriesPath = jarFilterTool.getDirectoriesPath();
+//        readFile.init(directoriesPath);
+//        jarFilterTool.outObsoleteJarsFilter(readFile);
+//        readFile.removeJarVersionInf(readFile.getFilesPathLists(directoriesPath));
+//    }catch (Exception e){
+//        System.out.println(e);
+//        System.exit(1);
+//    }
+//    System.exit(1);
+    JarFilterTool jarFilterTool = new JarFilterTool();
+    jarFilterTool.createJFrame();
+}
+
     /**
     *@Description 扫描jar包功能
     *@Param void
@@ -69,7 +72,7 @@ public class JarFilterTool {
         }catch (Exception e){
             System.out.println(e);
             //如果报错，强行停止程序
-            System.exit(1);
+//            System.exit(1);
         }
         System.exit(0);
     }
@@ -172,7 +175,13 @@ public class JarFilterTool {
                     filePathLists = readFile.getFilesPathLists(readFile.getPath_preliminary());
                     for (int i = 0; i < fileNameLists.length; i++) {
 //                        filePathLists[i].renameTo(new File(readFile.getPath(),fileNameLists[i]));
-                        Files.copy(filePathLists[i].toPath(), Paths.get(readFile.getPath() + "/" + filePathLists[i].getName()));
+                        System.out.println(filePathLists[i].toPath()+","+Paths.get(readFile.getPath() + "/" + filePathLists[i].getName()));
+                        if (readFile.deleteFile(Paths.get(readFile.getPath() + "/" + filePathLists[i].getName()).toString())) {
+                            Files.copy(filePathLists[i].toPath(), Paths.get(readFile.getPath() + "/" + filePathLists[i].getName()));
+                        }else{
+                            System.out.println("源目录中存在文件，请手动删除,文件路径:"+Paths.get(readFile.getPath() + "/" + filePathLists[i].getName()));
+                        }
+
                     }
                     System.out.println("移动成功");
                 }else{
