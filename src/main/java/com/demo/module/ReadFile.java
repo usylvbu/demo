@@ -12,7 +12,6 @@ import java.net.URL;
 import java.net.JarURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
@@ -144,7 +143,7 @@ public class ReadFile {
             System.out.println(e);
         } catch (IOException e) {
             if (e.getMessage().contains("not found")){
-                System.out.println("大小小于1kb的未废弃文件");
+                System.out.println(filePath.getPath()+" 这是大小小于1kb的未废弃文件，请手动确认");
             } else if (e.getMessage().contains("拒绝访问")) {
                 System.out.printf("文件夹",e.getMessage());
             }else{
@@ -196,33 +195,8 @@ public class ReadFile {
         if (!outFile.getParentFile().exists()){
             outFile.getParentFile().mkdirs();
         }
-//        else{
-//            boolean isDeleteDir = deleteDir(outFile.getParentFile());
-//            if (isDeleteDir) {
-//                System.out.println("初始化删除"+path);
-//            }else{
-//                System.out.println("初始化失败");
-//            }
-//            createCatalogue(path);
-//        }
     }
-    /*
-    private static boolean deleteDir(File dir) {
 
-        if (dir.isDirectory()) {
-            String[] children = dir.list();
-            //递归删除子目录
-            for (int i=0; i<children.length; i++) {
-                boolean success = deleteDir(new File(dir, children[i]));
-                if (!success) {
-                    return false;
-                }
-            }
-        }
-        // 目录此时为空，可以删除
-        return dir.delete();
-    }
-     */
     /**
     *@Description 将文件大小小于1kb的文件移动到preliminary目录
     *@Param boolean
@@ -235,11 +209,8 @@ public class ReadFile {
             //第一次处理
             String newPath = this.getPath_preliminary()+"\\";
             for (int i = 0; i < fileNameLists.length; i++) {
-                for (String whiteFile:WHITE_PATH) {
-                    //如果文件名处于白名单中则不处理
-                    if (fileNameLists[i].startsWith(whiteFile) || !fileNameLists[i].endsWith(".jar")){
-                        continue;
-                    }
+                if (fileNameLists[i].endsWith(".jar")){
+                    continue;
                 }
                 //文件路径拼接
                 fileNameLists[i] = newPath.concat(fileNameLists[i]);
@@ -315,11 +286,13 @@ public class ReadFile {
         for (int i = 0; i < filePathLists.length; i++) {
             boolean isContain = isContainVersionInf(filePathLists[i]);
             if (isContain) {
-                boolean isFileExists = isFileExists(new File(this.path_contain_version_inf + "/" + filePathLists[i].getName()));
+                boolean isFileExists = isFileExists(new File(this.path_contain_version_inf + "/" +
+                        filePathLists[i].getName()));
                 if (isFileExists) {
                     filePathLists[i].delete();
                 }
-                Files.copy(filePathLists[i].toPath(), Paths.get(this.path_contain_version_inf + "/" + filePathLists[i].getName()));
+                Files.copy(filePathLists[i].toPath(), Paths.get(this.path_contain_version_inf + "/" +
+                        filePathLists[i].getName()));
                 readerJarVersion(filePathLists[i].getPath());
                 deleteJarVersionInf(filePathLists[i]);
             }
@@ -328,16 +301,26 @@ public class ReadFile {
         return true;
     }
 
-    public void readerJarVersion(String jarFilePath){
-        JarFile jarFile = null;
+    public String readerJarVersion(String jarFilePath) throws IOException {
+        JarFile jarFile = new JarFile(new File(jarFilePath));
+        String info = "";
         try {
 //            String jarFilePath = "path/to/your/jar/file.jar";
 //            jarFile = new JarFile(jarFilePath);
             Manifest manifest = jarFile.getManifest();
+            if (manifest == null){
+                System.out.println("JarFilePath="+jarFilePath+" 此JAR包无版本信息");
+                info = "JarFilePath="+jarFilePath+" 此JAR包无版本信息";
+                return info;
+            }
             Attributes attrs = manifest.getMainAttributes();
             String version = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-            System.out.println("JarName="+jarFilePath+"Version: " + version);
-        } catch (IOException e) {
+            if(version == null || "".equals(version)){
+                version = "此jar包未包含版本信息，可参考文件名";
+            }
+            System.out.println("JarFilePath="+jarFilePath+" Version: " + version);
+            info = "JarFilePath="+jarFilePath+" Version: " + version;
+        } catch (RuntimeException e) {
             e.printStackTrace();
         } finally {
             if (jarFile != null) {
@@ -348,6 +331,7 @@ public class ReadFile {
                 }
             }
         }
+        return info;
     }
     /**
     *@Description 删除版本信息文件
@@ -455,4 +439,43 @@ public class ReadFile {
             return false;
         }
     }
+    /**
+    *@Description 递归获取所有jar文件
+    *@Param void
+    *@Return void
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/6/15 16:25
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate: 2023/06/15 16:31
+    */
+    public void listFiles(List<String> files,String dirName){
+        listFiles(files,dirName,".jar");
+    }
+    /**
+    *@Description 递归获取指定后缀文件
+    *@Param void
+    *@Return void
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/6/15 16:26
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate: 2023/06/15 16:31
+    */
+    public void listFiles(List<String> files,String dirName, String extname){
+        File dirFile = new File(dirName);
+        if(!dirFile.exists() || (!dirFile.isDirectory())){
+        }else{
+            File[] tmpfiles = dirFile.listFiles();
+            for(int i=0;i<tmpfiles.length;i++){
+                File f = tmpfiles[i];
+                if(f.isFile()){
+                    if(extname==null || f.getName().toLowerCase().endsWith(extname)){
+                        files.add(f.getAbsolutePath().replaceAll("\\\\", "/"));
+                    }
+                }else if(f.isDirectory()){
+                    listFiles(files,f.getAbsolutePath().replaceAll("\\\\", "/"),extname);
+                }
+            }
+        }
+    }
+
 }
