@@ -26,6 +26,8 @@ import java.util.List;
  */
 public class JarFilterTool {
     private TextArea ta = new TextArea();
+
+    private ReadFile readFile = new ReadFile();
     public static void main(String[] args) throws IOException, ZipException {
 
 //    System.out.println("欢迎使jar包扫描工具");
@@ -73,11 +75,10 @@ public class JarFilterTool {
             //移除版本信息
             readFile.removeJarVersionInf(readFile.getFilesPathLists(directoriesPath));
         }catch (Exception e){
-            System.out.println(e);
+            System.out.println(e.getMessage());
             //如果报错，强行停止程序
 //            System.exit(1);
         }
-        System.exit(0);
     }
     /**
     *@Description 创建面板
@@ -86,7 +87,7 @@ public class JarFilterTool {
     *@Author LinZhaoKang.
     *@Date Created in 2023/2/10 14:13
     *@Modified By: LinZhaoKang.
-    *@ModifiedDate:
+    *@ModifiedDate: 2023/06/16 11:12
     */
     public void createJFrame(){
         Frame fr = new Frame("Hello");
@@ -103,6 +104,9 @@ public class JarFilterTool {
             }
         });
         ta.setEnabled(false);
+//        ta.setBackground(Color.white);
+//        ta.setForeground(Color.black);
+        ta.setFont(new Font("Arial", Font.BOLD, 16));
         Button button = new Button();
         button.setLabel("One Click Processing");
         button.setName("One Click Processing");
@@ -140,15 +144,82 @@ public class JarFilterTool {
                 ta.setText("");
             }
         });
+        Button buttonByClearRevokeJAR = new Button();
+        buttonByClearRevokeJAR.setLabel("Clear Revoke JAR");
+        buttonByClearRevokeJAR.setName("Clear Revoke JAR");
+        buttonByClearRevokeJAR.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try{
+                    readFile.init(getDirectoriesPath());
+                    clearRevokeJAR();
+                }catch (Exception exception){
+                    System.out.println(exception.getMessage());
+                    ta.append(exception.getMessage());
+                }
+
+            }
+        });
         fr.add(button);
         fr.add(buttonByScanJarVersion);
         fr.add(buttonByClear);
+        fr.add(buttonByClearRevokeJAR);
         fr.add(ta);
-//        fr.pack();
-//        fr.add(pan);
-
         fr.setVisible(true);
     }
+    /**
+    *@Description 清除当前目录中的废弃jar包，并将其备份到preliminary目录
+    *@Param void
+    *@Return void
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/6/16 14:43
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate: Update in
+    */
+    public void clearRevokeJAR(){
+        try{
+            String[] fileNameLists = readFile.getFilesNameLists(readFile.getPath());
+            File[] filePathLists = readFile.getFilesPathLists(readFile.getPath());
+            boolean isMove = readFile.moveFileToPreliminary(fileNameLists, filePathLists);
+            if (isMove){
+                ta.append("move succeed\n");
+                System.out.println("move succeed");
+            }else{
+                ta.append("move fail\n");
+                System.out.println("move fail");
+            }
+            fileNameLists = readFile.getFilesNameLists(readFile.getPath_preliminary());
+            filePathLists = readFile.getFilesPathLists(readFile.getPath_preliminary());
+            if (filePathLists!=null&&fileNameLists!=null) {
+                for (int i = 0; i < fileNameLists.length; i++) {
+                    if (!fileNameLists[i].endsWith(".jar")) {
+                        continue;
+                    }
+                    isMove = readFile.moveJarToScreening(fileNameLists[i], filePathLists[i]);
+                    if (isMove) {
+                        System.out.println(fileNameLists[i] + "移动成功");
+                        ta.append(fileNameLists[i] + "移动成功\n");
+                    } else {
+                        System.out.println(fileNameLists[i] + "移动失败");
+                        ta.append(fileNameLists[i] + "移动失败,详情见控制台信息\n");
+                    }
+                }
+            }
+
+        }catch (Exception e){
+            ta.append("move error\n");
+            System.out.println("move error");
+        }
+    }
+    /**
+    *@Description 扫描并输出jar包版本信息
+    *@Param void
+    *@Return void
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/6/16 11:13
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate: Update in
+    */
     public void scanJarVersion(){
         try {
             String  filePath = getDirectoriesPath();
@@ -195,7 +266,7 @@ public class JarFilterTool {
     *@Author LinZhaoKang.
     *@Date Created in 2023/1/12 9:55
     *@Modified By: LinZhaoKang.
-    *@ModifiedDate:
+    *@ModifiedDate: 2023/06/16 10:15
     */
     public boolean outObsoleteJarsFilter(ReadFile readFile) throws IOException {
         String[] fileNameLists = readFile.getFilesNameLists(readFile.getPath());
@@ -243,6 +314,8 @@ public class JarFilterTool {
         }
         return true;
     }
+
+
     /**
     *@Description 判断目录是否为空
     *@Param boolean

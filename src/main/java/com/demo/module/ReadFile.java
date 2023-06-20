@@ -3,9 +3,12 @@ package com.demo.module;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -22,7 +25,7 @@ import java.util.jar.Manifest;
  * @Author: LinZhaoKang.
  * @Description:
  * @Date Created in 2023/1/4
- * @Modified By:
+ * @Modified By: 2023/06/15 16:31
  */
 public class ReadFile {
     private final static String PATH = "D:/Desktop/test/lib";
@@ -94,8 +97,8 @@ public class ReadFile {
 //
 //    }
     /**
-    *@Description 初始化
-    *@Param void
+    *@Description 初始化 path,path_preliminary,path_screening,path_contain_version_inf
+    *@Param String
     *@Return void
     *@Author LinZhaoKang.
     *@Date Created in 2023/1/12 10:12
@@ -209,7 +212,7 @@ public class ReadFile {
             //第一次处理
             String newPath = this.getPath_preliminary()+"\\";
             for (int i = 0; i < fileNameLists.length; i++) {
-                if (fileNameLists[i].endsWith(".jar")){
+                if (!fileNameLists[i].endsWith(".jar")){
                     continue;
                 }
                 //文件路径拼接
@@ -300,26 +303,25 @@ public class ReadFile {
 
         return true;
     }
-
+    /**
+    *@Description 读取jar包的版本信息
+    *@Param String
+    *@Return java.lang.String
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/6/20 20:28
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate: Update in
+    */
     public String readerJarVersion(String jarFilePath) throws IOException {
         JarFile jarFile = new JarFile(new File(jarFilePath));
         String info = "";
         try {
-//            String jarFilePath = "path/to/your/jar/file.jar";
-//            jarFile = new JarFile(jarFilePath);
-            Manifest manifest = jarFile.getManifest();
-            if (manifest == null){
-                System.out.println("JarFilePath="+jarFilePath+" 此JAR包无版本信息");
-                info = "JarFilePath="+jarFilePath+" 此JAR包无版本信息";
-                return info;
-            }
-            Attributes attrs = manifest.getMainAttributes();
-            String version = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-            if(version == null || "".equals(version)){
-                version = "此jar包未包含版本信息，可参考文件名";
-            }
-            System.out.println("JarFilePath="+jarFilePath+" Version: " + version);
-            info = "JarFilePath="+jarFilePath+" Version: " + version;
+            String versionMF = "";
+            String versionPom = "";
+            versionMF = getMFVersion(jarFilePath);
+            versionPom = getPomVersion(jarFilePath);
+            System.out.println("JarFilePath="+jarFilePath+" versionMF: " + versionMF+" versionPom"+versionPom);
+            info = "JarFilePath="+jarFilePath+" versionMF: " + versionMF+" versionPom"+versionPom;
         } catch (RuntimeException e) {
             e.printStackTrace();
         } finally {
@@ -332,6 +334,61 @@ public class ReadFile {
             }
         }
         return info;
+    }
+    /**
+    *@Description 获取MF文件中的版本信息
+    *@Param String
+    *@Return java.lang.String
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/6/20 20:37
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate: Update in
+    */
+    private String getMFVersion(String jarFilePath) throws IOException {
+        JarFile jarFile = new JarFile(new File(jarFilePath));
+        String version = "";
+        Manifest manifest = jarFile.getManifest();
+        if (manifest == null){
+            System.out.println("JarFilePath="+jarFilePath+" 此JAR包无版本信息");
+            version = "JarFilePath="+jarFilePath+" 此JAR包无版本信息";
+            return version;
+        }
+        Attributes attrs = manifest.getMainAttributes();
+        version = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+        return version;
+    }
+
+    /**
+    *@Description 读取pom中的版本信息
+    *@Param String
+    *@Return java.lang.String
+    *@Author LinZhaoKang.
+    *@Date Created in 2023/6/20 20:29
+    *@Modified By: LinZhaoKang.
+    *@ModifiedDate: Update in
+    */
+    private String getPomVersion(String jarFilePath){
+        String versionStr = "";
+        //项目路径
+        String pathStr = System.getProperty("user.dir");
+        MavenXpp3Reader mx3Reader = new MavenXpp3Reader();
+        String pomPath = jarFilePath + File.separator+"pom.xml";
+        pomPath = decodeStr(pomPath);//编码为utf-8
+        try{
+            Model model = mx3Reader.read(new FileReader(pomPath));
+            versionStr = model.getVersion();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return versionStr;
+    }
+    public String decodeStr(String text){
+        try{
+            text = java.net.URLDecoder.decode(text,"UTF-8");
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return text;
     }
     /**
     *@Description 删除版本信息文件
