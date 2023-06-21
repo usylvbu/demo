@@ -1,21 +1,21 @@
 package com.demo.module;
 
+import com.sun.xml.internal.ws.api.model.CheckedException;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.JarURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -317,11 +317,14 @@ public class ReadFile {
         String info = "";
         try {
             String versionMF = "";
-            String versionPom = "";
             versionMF = getMFVersion(jarFilePath);
-            versionPom = getPomVersion(jarFilePath);
-            System.out.println("JarFilePath="+jarFilePath+" versionMF: " + versionMF+" versionPom"+versionPom);
-            info = "JarFilePath="+jarFilePath+" versionMF: " + versionMF+" versionPom"+versionPom;
+            Properties properties = new Properties();
+            byte[] versionPom = getPomVersion(jarFilePath,"pom.properties");
+            if(versionPom != null){
+                properties.load(new ByteArrayInputStream(versionPom));
+            }
+            System.out.println("JarFilePath="+jarFilePath+" versionMF: " + versionMF+" versionPom"+properties);
+            info = "JarFilePath="+jarFilePath+" versionMF: " + versionMF+" versionPom"+properties;
         } catch (RuntimeException e) {
             e.printStackTrace();
         } finally {
@@ -358,29 +361,33 @@ public class ReadFile {
         return version;
     }
 
-    /**
-    *@Description 读取pom中的版本信息
-    *@Param String
-    *@Return java.lang.String
-    *@Author LinZhaoKang.
-    *@Date Created in 2023/6/20 20:29
-    *@Modified By: LinZhaoKang.
-    *@ModifiedDate: Update in
-    */
-    private String getPomVersion(String jarFilePath){
-        String versionStr = "";
-        //项目路径
-        String pathStr = System.getProperty("user.dir");
-        MavenXpp3Reader mx3Reader = new MavenXpp3Reader();
-        String pomPath = jarFilePath + File.separator+"pom.xml";
-        pomPath = decodeStr(pomPath);//编码为utf-8
-        try{
-            Model model = mx3Reader.read(new FileReader(pomPath));
-            versionStr = model.getVersion();
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        return versionStr;
+/**
+*@Description 获取pom中的版本信息
+*@Param byte
+*@Return byte[]
+*@Author LinZhaoKang.
+*@Date Created in 2023/6/21 19:51
+*@Modified By: LinZhaoKang.
+*@ModifiedDate: Update in
+*/
+    private byte[] getPomVersion(String jarFilePath,String filename){
+        File file = new File(jarFilePath);
+            try (JarFile jarFile = new JarFile(file)){
+                Enumeration<JarEntry> entries = jarFile.entries();
+                while (entries.hasMoreElements()){
+                    JarEntry jarEntry = entries.nextElement();
+                    if (jarEntry.getName().endsWith(filename)) {
+                        try (InputStream inputStream = jarFile.getInputStream(jarEntry)){
+                            byte[] bytes = new byte[inputStream.available()];
+                            inputStream.read(bytes);
+                            return bytes;
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return null;
     }
     public String decodeStr(String text){
         try{
